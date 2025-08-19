@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI职场教练 - Demo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            background: 'hsl(0 0% 100%)',
+            foreground: 'hsl(222.2 84% 4.9%)',
+            muted: {
+              DEFAULT: '#f4f4f5',
+              foreground: '#6b7280'
+            },
+            primary: {
+              DEFAULT: '#111827',
+              foreground: '#ffffff'
+            },
+            secondary: {
+              DEFAULT: '#f3f4f6',
+              foreground: '#111827'
+            },
+            ring: '#2563eb',
+            border: '#e5e7eb',
+            card: {
+              DEFAULT: '#ffffff',
+              foreground: '#111827'
+            }
+          },
+          boxShadow: {
+            card: '0 1px 2px 0 rgba(0,0,0,0.05)'
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: 0, transform: 'translateY(4px)' },
+              '100%': { opacity: 1, transform: 'translateY(0)' }
+            }
+          },
+          animation: {
+            fadeIn: 'fadeIn .25s ease-out'
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .blurred { filter: blur(4px); }
+    .mask-gradient { -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,1), rgba(0,0,0,0.2)); mask-image: linear-gradient(180deg, rgba(0,0,0,1), rgba(0,0,0,0.2)); }
+  </style>
+</head>
+<body class="bg-background text-foreground">
+  <div class="min-h-screen">
+    <!-- Navbar -->
+    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-border">
+      <div class="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="h-8 w-8 rounded-md bg-black text-white grid place-items-center text-sm font-bold">AI</div>
+          <span class="font-semibold">AI职场教练</span>
+        </div>
+        <nav class="hidden md:flex items-center gap-6 text-sm">
+          <button data-nav="landing" class="hover:text-black">首页</button>
+          <button data-nav="test" class="hover:text-black">测评</button>
+          <button data-nav="result" class="hover:text-black">测试报告</button>
+          <button data-nav="tools" class="hover:text-black">工具箱</button>
+          <button data-nav="subscribe" class="hover:text-black">订阅</button>
+        </nav>
+        <div class="flex items-center gap-2">
+          <button id="btnStartTestTop" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-black text-white hover:bg-black/90 h-9 px-4 py-2">开始免费测评</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-6xl px-4 py-8 space-y-12">
+      <!-- Landing -->
+      <section id="section-landing" class="animate-fadeIn">
+        <div class="grid md:grid-cols-2 gap-8 items-center">
+          <div class="space-y-4">
+            <h1 class="text-2xl md:text-3xl font-bold tracking-tight">3分钟定位你的晋升与跳槽路径</h1>
+            <p class="text-muted-foreground">用数据和话术，把成果“看得见、说得清、推得动”。完成测评即可获得免费的测试报告与关键建议。</p>
+            <div class="flex flex-wrap gap-3">
+              <button id="btnStartTest" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-black text-white hover:bg-black/90 h-10 px-5">开始免费测评</button>
+              <button data-nav="subscribe" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-border bg-white hover:bg-secondary h-10 px-5">查看订阅权益</button>
+            </div>
+            <div class="flex items-center gap-4 text-xs text-muted-foreground">
+              <div class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-green-500"></span> 首次赠送AI教练10轮试用</div>
+              <div class="flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-blue-500"></span> 周报/述职模板即时可用</div>
+            </div>
+          </div>
+          <div class="border border-border rounded-lg p-6 shadow-card bg-card">
+            <h3 class="font-semibold mb-3">样例报告片段</h3>
+            <div class="grid grid-cols-3 gap-3 text-xs">
+              <div class="p-3 rounded-md bg-secondary">阶段：进阶（3-5年）</div>
+              <div class="p-3 rounded-md bg-secondary">强项：执行/沟通/复盘</div>
+              <div class="p-3 rounded-md bg-secondary">短板：影响力/策略</div>
+            </div>
+            <div class="mt-4 p-4 border rounded-md text-sm leading-relaxed">
+              建议：与你的上级在1:1中对齐“季度目标-资源-里程碑”，用可见度驱动资源，配合跨部门盟友推进关键节点。
+            </div>
+            <div class="mt-4 grid sm:grid-cols-3 gap-3 text-xs">
+              <div class="p-3 rounded-md border">30-60-90行动清单（预览）</div>
+              <div class="p-3 rounded-md border">晋升/跳槽路径对比（预览）</div>
+              <div class="p-3 rounded-md border">关键场景话术（预览）</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Test -->
+      <section id="section-test" class="hidden animate-fadeIn">
+        <div class="max-w-3xl mx-auto">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-semibold">免费测评（12题 / 3分钟）</h2>
+            <div class="text-sm text-muted-foreground">进度 <span id="progressText">0/12</span></div>
+          </div>
+          <div class="w-full h-2 bg-secondary rounded-full overflow-hidden mb-6">
+            <div id="progressBar" class="h-full bg-black w-0 transition-all"></div>
+          </div>
+          <div id="questionCard" class="border border-border rounded-lg p-6 shadow-card bg-card">
+            <!-- Question will render here -->
+          </div>
+          <div class="mt-6 flex items-center justify-between">
+            <button id="btnPrev" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-border bg-white hover:bg-secondary h-10 px-4" disabled>上一步</button>
+            <div class="flex items-center gap-3">
+              <button id="btnSkip" class="text-sm text-muted-foreground hover:text-foreground">跳过此题</button>
+              <button id="btnNext" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-black text-white hover:bg-black/90 h-10 px-6">下一题</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Result (Free Test Report) -->
+      <section id="section-result" class="hidden animate-fadeIn">
+        <div class="grid lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 space-y-6">
+            <div class="border border-border rounded-lg p-6 shadow-card bg-card">
+              <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold">免费测试报告</h2>
+                <span id="stageBadge" class="text-xs px-2 py-1 rounded-md bg-secondary">阶段：-</span>
+              </div>
+              <p class="text-sm text-muted-foreground mt-1">你的职业画像与关键建议如下，可下载并分享。订阅可解锁进阶方案与工具。</p>
+              <div class="mt-6 grid sm:grid-cols-3 gap-4 text-sm">
+                <div class="p-3 rounded-md bg-secondary">
+                  <div class="text-xs text-muted-foreground">强项（Top 3）</div>
+                  <ul id="strengthList" class="list-disc pl-4 mt-1 space-y-1"></ul>
+                </div>
+                <div class="p-3 rounded-md bg-secondary">
+                  <div class="text-xs text-muted-foreground">短板（Top 3）</div>
+                  <ul id="weaknessList" class="list-disc pl-4 mt-1 space-y-1"></ul>
+                </div>
+                <div class="p-3 rounded-md bg-secondary">
+                  <div class="text-xs text-muted-foreground">首要瓶颈</div>
+                  <div id="primaryIssue" class="mt-1"></div>
+                </div>
+              </div>
+              <div class="mt-6">
+                <canvas id="radarChart" height="220"></canvas>
+              </div>
+              <div class="mt-6 p-4 border rounded-md text-sm leading-relaxed" id="adviceBlock">
+                建议：—
+              </div>
+              <div class="mt-4 flex flex-wrap gap-3">
+                <button id="btnDownload" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-border bg-white hover:bg-secondary h-10 px-4">下载报告</button>
+                <button data-nav="tools" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-black text-white hover:bg-black/90 h-10 px-4">去用工具</button>
+              </div>
+            </div>
+
+            <div class="border border-border rounded-lg p-6 shadow-card bg-card">
+              <h3 class="font-semibold">AI教练试用</h3>
+              <p class="text-sm text-muted-foreground">领取后可使用10轮对话，订阅可按配额使用。</p>
+              <div class="mt-3 flex items-center gap-3">
+                <button id="btnTrialAI" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-black text-white hover:bg-black/90 h-9 px-4">领取试用</button>
+                <button data-nav="coach" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-border bg-white hover:bg-secondary h-9 px-4">打开AI教练</button>
+              </div>
+            </div>
+          </div>
+
+          <aside class="space-y-4">
+            <div class="border border-border rounded-lg p-5 shadow-card bg-card">
+              <h4 class="font-semibold mb-2">订阅预览</h4>
+              <div class="space-y-3 text-sm">
+                <div class="p-3 rounded-md border">
+                  <div class="text-xs text-muted-foreground mb-1">30-60-90行动清单</div>
+                  <div class="blurred select-none">第1周：输出与上级对齐清单；第2周：组建跨部门盟友；第3周：关键里程碑复盘...</div>
+                </div>
+                <div class="p-3 rounded-md border">
+                  <div class="text-xs text-muted-foreground mb-1">晋升/跳槽路径对比</div>
+                  <div class="blurred select-none">内部：A→B→C 预计3-6月；外部：X→Y→Z 预计1-3月；成功率与薪资增幅...</div>
+                </div>
+                <div class="p-3 rounded-md border">
+                  <div class="text-xs text-muted-foreground mb-1">关键场景话术包</div>
+                  <div class="blurred select-none">与上级1:1：本周目标/阻碍/请求资源；跨部门：价值-证据-请求；谈薪：范围-锚点-让步...</div>
+                </div>
+              </div>
+              <div class="mt-4">
+                <button data-nav="subscribe" class="w-full inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-black text-white hover:bg-black/90 h-10 px-4">开通订阅</button>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- Tools -->
+      <section id="section-tools" class="hidden animate-fadeIn">
+        <h2 class="text-xl font-semibold mb-4">工具箱</h2>
+        <div class="grid md:grid-cols-3 gap-4">
+          <div class="border border-border rounded-lg p-4 shadow-card bg-card flex flex-col">
+            <div class="font-medium">周报生成器</div>
+            <p class="text-xs text-muted-foreground">输入本周目标与成果，一键生成清晰周报。</p>
+            <textarea id="weeklyInput" class="mt-3 w-full h-28 text-sm border border-border rounded-md p-2" placeholder="目标/里程碑/数据/阻碍/下周计划"></textarea>
+            <button id="btnWeeklyGen" class="mt-3 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-black text-white hover:bg-black/90 h-9 px-4">生成周报</button>
+            <pre id="weeklyOutput" class="mt-3 text-xs bg-secondary p-3 rounded-md whitespace-pre-wrap"></pre>
+          </div>
+          <div class="border border-border rounded-lg p-4 shadow-card bg-card flex flex-col">
+            <div class="font-medium">晋升答辩大纲</div>
+            <p class="text-xs text-muted-foreground">给出问题骨架与素材清单。</p>
+            <button id="btnPromo" class="mt-3 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-border bg-white hover:bg-secondary h-9 px-4">生成大纲</button>
+            <ul id="promoList" class="mt-3 text-sm list-disc pl-5 space-y-1"></ul>
+          </div>
+          <div class="border border-border rounded-lg p-4 shadow-card bg-card flex flex-col">
+            <div class="font-medium">与上级1:1议程</div>
+            <p class="text-xs text-muted-foreground">对齐目标-资源-里程碑。</p>
+            <button id="btnOneOnOne" class="mt-3 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-border bg-white hover:bg-secondary h-9 px-4">生成议程</button>
+            <ul id="oneOnOneList" class="mt-3 text-sm list-disc pl-5 space-y-1"></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Subscribe -->
+      <section id="section-subscribe" class="hidden animate-fadeIn">
+        <h2 class="text-xl font-semibold mb-4">订阅方案</h2>
+        <div class="grid md:grid-cols-3 gap-4">
+          <div class="border border-border rounded-lg p-5 shadow-card bg-card flex flex-col">
+            <div class="text-sm font-semibold">Lite</div>
+            <div class="mt-2 text-2xl font-bold">¥39<span class="text-sm font-normal text-muted-foreground">/月</span></div>
+            <ul class="mt-3 text-sm space-y-2">
+              <li>每周微课</li>
+              <li>工具库</li>
+              <li>AI教练30轮/月</li>
+              <li>周报生成器</li>
+            </ul>
+            <button class="mt-auto inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-black text-white hover:bg-black/90 h-10 px-4">开通Lite</button>
+          </div>
+          <div class="border border-border rounded-lg p-5 shadow-card bg-card flex flex-col ring-1 ring-black/5">
+            <div class="text-sm font-semibold">Pro</div>
+            <div class="mt-2 text-2xl font-bold">¥129<span class="text-sm font-normal text-muted-foreground">/月</span></div>
+            <ul class="mt-3 text-sm space-y-2">
+              <li>简历/JD匹配</li>
+              <li>面试模拟/谈薪计算器</li>
+              <li>月度复盘</li>
+              <li>AI教练100轮/月</li>
+              <li>群Office Hour</li>
+            </ul>
+            <button class="mt-auto inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-black text-white hover:bg-black/90 h-10 px-4">开通Pro</button>
+          </div>
+          <div class="border border-border rounded-lg p-5 shadow-card bg-card flex flex-col">
+            <div class="text-sm font-semibold">Coach</div>
+            <div class="mt-2 text-2xl font-bold">¥499<span class="text-sm font-normal text-muted-foreground">/月</span></div>
+            <ul class="mt-3 text-sm space-y-2">
+              <li>1v1教练30分钟/月</li>
+              <li>个性化路线调整</li>
+              <li>面试实战点评</li>
+            </ul>
+            <button class="mt-auto inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-black text-white hover:bg-black/90 h-10 px-4">开通Coach</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- AI Coach -->
+      <section id="section-coach" class="hidden animate-fadeIn">
+        <div class="max-w-3xl mx-auto border border-border rounded-lg shadow-card bg-card">
+          <div class="p-4 border-b">AI教练</div>
+          <div id="chatArea" class="h-80 overflow-y-auto p-4 space-y-3 text-sm">
+            <div class="flex gap-3 items-start">
+              <div class="h-8 w-8 rounded-md bg-black text-white grid place-items-center text-xs">AI</div>
+              <div class="p-3 rounded-md bg-secondary">你好，我是你的AI职场教练。告诉我你当前的目标或卡点，我们一起拆解。</div>
+            </div>
+          </div>
+          <div class="p-3 border-t flex items-center gap-2">
+            <input id="chatInput" class="flex-1 text-sm border border-border rounded-md h-10 px-3" placeholder="输入你的问题，例如：如何在1:1与上级有效对齐？" />
+            <button id="btnSend" class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-black text-white hover:bg-black/90 h-10 px-4">发送</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="border-t border-border py-6 text-center text-xs text-muted-foreground">
+      © 2025 AI职场教练 Demo · 测试报告免费 · 订阅解锁进阶方案与工具
+    </footer>
+  </div>
+
+  <script>
+    // Router-like section switching
+    const sections = ['landing','test','result','tools','subscribe','coach']
+    function showSection(name){
+      sections.forEach(id => {
+        const el = document.getElementById('section-' + id)
+        if(!el) return
+        if(id === name) el.classList.remove('hidden'); else el.classList.add('hidden')
+      })
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+    document.querySelectorAll('[data-nav]').forEach(btn => {
+      btn.addEventListener('click', () => showSection(btn.dataset.nav))
+    })
+    document.getElementById('btnStartTest').addEventListener('click', () => showSection('test'))
+    document.getElementById('btnStartTestTop').addEventListener('click', () => showSection('test'))
+
+    // Test questions (12) and scoring
+    const questions = [
+      { id: 1, text: '我对下一次晋升的路径与要求非常清晰', dim: 'clarity' },
+      { id: 2, text: '与上级的1:1中，我能主动引导到目标和资源', dim: 'communication' },
+      { id: 3, text: '面对跨部门阻力时，我能用数据与盟友推进', dim: 'influence' },
+      { id: 4, text: '我能在复盘中提炼可迁移的方法论', dim: 'retrospection' },
+      { id: 5, text: '我能为关键里程碑拆解明确的任务与责任', dim: 'execution' },
+      { id: 6, text: '当前主要压力我能有效管理和复盘', dim: 'retrospection' },
+      { id: 7, text: '我与同事/客户能建立稳定的协作预期', dim: 'communication' },
+      { id: 8, text: '我能识别并影响关键人，提升成果可见度', dim: 'influence' },
+      { id: 9, text: '我对本季度目标与资源有清晰的映射', dim: 'clarity' },
+      { id:10, text: '我能将问题上升到策略层面并提出选项', dim: 'strategy' },
+      { id:11, text: '我每周进行结构化复盘并沉淀模板', dim: 'retrospection' },
+      { id:12, text: '我能在项目推进中稳态交付（无拖延/返工）', dim: 'execution' },
+    ]
+    const dimNames = { clarity: '目标清晰', execution: '执行力', communication: '沟通力', influence: '影响力', strategy: '策略思维', retrospection: '复盘能力' }
+    const dimOrder = ['clarity','execution','communication','influence','strategy','retrospection']
+    const answers = new Map() // id -> 1..5
+    let idx = 0
+
+    function renderQuestion(){
+      const q = questions[idx]
+      const card = document.getElementById('questionCard')
+      card.innerHTML = `
+        <div class="text-sm text-muted-foreground">第 ${idx+1} 题 / ${questions.length}</div>
+        <div class="mt-2 text-lg font-medium">${q.text}</div>
+        <div class="mt-4 grid grid-cols-5 gap-2">
+          ${[1,2,3,4,5].map(v => `
+            <label class="border border-border rounded-md p-3 text-center cursor-pointer hover:bg-secondary ${answers.get(q.id)===v? 'bg-black text-white border-black' : ''}">
+              <input type="radio" name="q${q.id}" value="${v}" class="hidden" ${answers.get(q.id)===v?'checked':''} />
+              ${v}
+            </label>
+          `).join('')}
+        </div>
+      `
+      card.querySelectorAll('label').forEach((label, i) => {
+        label.addEventListener('click', () => {
+          answers.set(q.id, i+1)
+          renderQuestion()
+        })
+      })
+      // progress
+      const progress = Math.round(((idx) / questions.length) * 100)
+      document.getElementById('progressBar').style.width = `${progress}%`
+      document.getElementById('progressText').textContent = `${idx}/${questions.length}`
+      document.getElementById('btnPrev').disabled = idx===0
+      document.getElementById('btnNext').textContent = idx===questions.length-1? '完成' : '下一题'
+    }
+
+    document.getElementById('btnPrev').addEventListener('click', () => { if(idx>0){ idx--; renderQuestion() } })
+    document.getElementById('btnNext').addEventListener('click', () => {
+      if(idx < questions.length-1){ idx++; renderQuestion() }
+      else { finishTest() }
+    })
+    document.getElementById('btnSkip').addEventListener('click', () => {
+      answers.set(questions[idx].id, 3) // neutral
+      if(idx < questions.length-1){ idx++; renderQuestion() } else { finishTest() }
+    })
+
+    function aggregateScores(){
+      const scores = { clarity:0, execution:0, communication:0, influence:0, strategy:0, retrospection:0 }
+      const counts = { clarity:0, execution:0, communication:0, influence:0, strategy:0, retrospection:0 }
+      questions.forEach(q => {
+        const v = answers.get(q.id) ?? 3
+        scores[q.dim]+=v; counts[q.dim]++
+      })
+      Object.keys(scores).forEach(k => scores[k] = Math.round((scores[k]/(counts[k]||1)) * 20)) // to 0-100
+      return scores
+    }
+
+    function inferStage(scores){
+      const avg = (scores.clarity + scores.influence + scores.strategy)/3
+      if(avg >= 75) return '高阶（5-10年）'
+      if(avg >= 55) return '进阶（3-5年）'
+      return '新人（0-3年）'
+    }
+
+    let radar;
+    function finishTest(){
+      const scores = aggregateScores()
+      showSection('result')
+      // stage badge
+      document.getElementById('stageBadge').textContent = '阶段：' + inferStage(scores)
+      // strengths & weaknesses
+      const sortedDims = Object.entries(scores).sort((a,b)=>b[1]-a[1])
+      const top3 = sortedDims.slice(0,3).map(([k])=>dimNames[k])
+      const bottom3 = sortedDims.slice(-3).map(([k])=>dimNames[k])
+      document.getElementById('strengthList').innerHTML = top3.map(t=>`<li>${t}</li>`).join('')
+      document.getElementById('weaknessList').innerHTML = bottom3.map(t=>`<li>${t}</li>`).join('')
+      document.getElementById('primaryIssue').textContent = bottom3[bottom3.length-1] || '-'
+      // advice
+      const adviceMap = {
+        '目标清晰': '与上级对齐季度目标-资源-里程碑，用可见度驱动资源配置。',
+        '影响力': '识别关键人，准备数据与共赢交易，建立推进盟友。',
+        '策略思维': '将问题上升到选项比较，给出路径、成本与风险。',
+        '沟通力': '固定1:1节奏，采用结构化表达（背景-目标-方案-请求）。',
+        '执行力': '拆解关键路径，建立每日进度盘点与复盘。',
+        '复盘能力': '每周沉淀模板，提炼可迁移方法论并分享可见。'
+      }
+      const key = document.getElementById('primaryIssue').textContent
+      document.getElementById('adviceBlock').textContent = '建议：' + (adviceMap[key] || '优先补齐短板维度，建立行动清单并跟进。')
+      // radar
+      const ctx = document.getElementById('radarChart')
+      if(radar) radar.destroy()
+      radar = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: dimOrder.map(k=>dimNames[k]),
+          datasets: [{
+            label: '你的得分',
+            data: dimOrder.map(k=>scores[k]),
+            backgroundColor: 'rgba(0,0,0,0.08)',
+            borderColor: '#111827',
+            pointBackgroundColor: '#111827'
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: { r: { suggestedMin: 0, suggestedMax: 100, angleLines: { color: '#e5e7eb' }, grid: { color: '#e5e7eb' }, pointLabels: { font: { size: 12 } } } },
+          plugins: { legend: { display: false } }
+        }
+      })
+    }
+
+    // Tools logic
+    document.getElementById('btnWeeklyGen').addEventListener('click', () => {
+      const raw = document.getElementById('weeklyInput').value.trim()
+      const text = raw ? raw : '目标：本周推进项目A里程碑M1\n成果：完成X/Y/Z，影响到KPI 12%\n阻碍：跨部门资源不足\n请求：协调资源与数据口径\n下周：推进M2，产出复盘文档'
+      const out = `周报（示例）\n1) 背景与目标\n- ${text.split('\n')[0]}\n\n2) 本周成果（数据可见）\n- ${text.split('\n')[1] || '完成关键交付，量化影响'}\n\n3) 风险与阻碍\n- ${text.split('\n')[2] || '存在跨部门协同成本'}\n\n4) 资源与请求\n- ${text.split('\n')[3] || '需要数据/人力支持'}\n\n5) 下周计划\n- ${text.split('\n')[4] || '明确里程碑，设定验收口径'}`
+      document.getElementById('weeklyOutput').textContent = out
+    })
+    document.getElementById('btnPromo').addEventListener('click', () => {
+      const items = [
+        '业绩与影响力亮点（数据/案例）',
+        '职责扩张与问题解决（STAR结构）',
+        '组织协作与跨部门推进',
+        '方法论沉淀与复用',
+        '下阶段目标与资源请求'
+      ]
+      document.getElementById('promoList').innerHTML = items.map(i=>`<li>${i}</li>`).join('')
+    })
+    document.getElementById('btnOneOnOne').addEventListener('click', () => {
+      const items = [
+        '本周目标/里程碑/风险',
+        '阻碍与需要的资源',
+        '跨部门协同与关键人',
+        '下周计划与验收口径'
+      ]
+      document.getElementById('oneOnOneList').innerHTML = items.map(i=>`<li>${i}</li>`).join('')
+    })
+
+    // Simple AI coach mock
+    let trialLeft = 0
+    document.getElementById('btnTrialAI').addEventListener('click', () => {
+      trialLeft = 10
+      alert('已领取AI教练试用：10轮对话')
+    })
+    function appendMsg(role, text){
+      const area = document.getElementById('chatArea')
+      const wrap = document.createElement('div')
+      wrap.className = 'flex gap-3 items-start'
+      wrap.innerHTML = role==='ai'
+        ? '<div class="h-8 w-8 rounded-md bg-black text-white grid place-items-center text-xs">AI</div><div class="p-3 rounded-md bg-secondary">'+text+'</div>'
+        : '<div class="h-8 w-8 rounded-md bg-secondary grid place-items-center text-xs">我</div><div class="p-3 rounded-md border">'+text+'</div>'
+      area.appendChild(wrap)
+      area.scrollTop = area.scrollHeight
+    }
+    document.getElementById('btnSend').addEventListener('click', () => {
+      const input = document.getElementById('chatInput')
+      const text = input.value.trim()
+      if(!text) return
+      if(trialLeft<=0){ appendMsg('ai','试用已用尽，请订阅以继续使用AI教练。'); return }
+      trialLeft--
+      appendMsg('user', text)
+      input.value=''
+      // naive heuristic reply
+      setTimeout(()=>{
+        let reply = '建议用“背景-目标-方案-请求”结构表达，约10-12句，并明确验收口径。'
+        if(/1:1|一对一|上级/.test(text)) reply = '准备1:1三件事：1) 本周目标/进展/数据；2) 阻碍与资源请求；3) 下周里程碑与验收口径。每次形成纪要。'
+        if(/跨部门|推进|阻力/.test(text)) reply = '识别关键人，列出共同目标与交易；用数据支撑，提前打点盟友，会上对齐里程碑与责任。'
+        if(/晋升|答辩/.test(text)) reply = '用STAR结构梳理3-5个关键案例，量化影响；总结方法论；提出下一阶段目标与资源计划。'
+        if(/跳槽|面试/.test(text)) reply = '对齐JD差距，准备STAR案例库；用可量化结果作为主线；谈薪前明确范围与锚点。'
+        appendMsg('ai', reply + `（剩余试用：${trialLeft}）`)
+      }, 400)
+    })
+
+    // Render first question when entering test
+    const testObserver = new MutationObserver(() => {
+      const visible = !document.getElementById('section-test').classList.contains('hidden')
+      if(visible && document.getElementById('questionCard').innerHTML.trim()===''){
+        idx = 0; answers.clear(); renderQuestion()
+      }
+    })
+    testObserver.observe(document.getElementById('section-test'), { attributes: true })
+  </script>
+</body>
+</html>
+
+

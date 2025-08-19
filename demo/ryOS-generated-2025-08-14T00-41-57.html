@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <link rel="stylesheet" href="/fonts/fonts.css">
+  <!-- ts=1755131932568 --> 
+  
+  <script type="module" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.174.0/three.module.min.js"></script>
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ["Geneva-12", "ArkPixel", "SerenityOS-Emoji", "sans-serif"],
+            mono: ["Monaco", "ArkPixel", "SerenityOS-Emoji", "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace"],
+            serif: ["Mondwest", "Yu Mincho", "Hiragino Mincho Pro", "Georgia", "Palatino", "SerenityOS-Emoji", "serif"],
+            emoji: ["SerenityOS-Emoji", "AppleColorEmoji", "AppleColorEmojiFallback"],
+            'geneva': ["Geneva-12", "ArkPixel", "SerenityOS-Emoji", "system-ui", "-apple-system", "sans-serif"],
+            'mondwest': ["Mondwest", "Yu Mincho", "Hiragino Mincho Pro", "Georgia", "Palatino", "Yu Mincho", "Hiragino Mincho Pro", "serif"],
+            'neuebit': ["NeueBit", "ArkPixel", "SerenityOS-Emoji", "Helvetica", "Arial", "Hiragino Sans", "sans-serif"],
+            'monaco': ["Monaco", "ArkPixel", "SerenityOS-Emoji", "monospace"],
+            'jacquard': ["Jacquard", "Yu Mincho", "Hiragino Mincho Pro", "Georgia", "Palatino", "serif"]
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    html, body {
+      margin: 0;
+      overflow-x: auto; /* Allow horizontal scroll if content overflows */
+      width: 100%;
+      height: 100%;
+      max-width: 100%; /* Prevent body from exceeding viewport width */
+    }
+    /* Ensure pre doesn't break layout */
+    pre {
+      white-space: pre-wrap; /* Allow wrapping */
+      word-break: break-all; /* Break long words */
+    }
+  </style>
+  
+  <!-- Move click interceptor script to head for earlier execution -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener('click', function(event) {
+        var targetElement = event.target.closest('a');
+        // Only intercept if it's a valid link and NOT inside the draggable toolbar
+        if (targetElement && targetElement.href && !targetElement.closest('[data-drag-controls]')) {
+          event.preventDefault();
+          event.stopPropagation();
+          try {
+            // Resolve relative URLs against the document's base URI (if set) or window location
+            const absoluteUrl = new URL(targetElement.getAttribute('href'), document.baseURI || window.location.href).href;
+            // Use a specific message type for AI HTML navigation
+            window.parent.postMessage({ type: 'aiHtmlNavigation', url: absoluteUrl }, '*');
+            console.log('Intercepted link click:', absoluteUrl);
+          } catch (e) { console.error("Error resolving/posting URL:", e); }
+        }
+      }, true); // Use capture phase to intercept early
+    });
+    
+    // Also add immediate execution version for documents that load quickly
+    // This helps ensure we don't miss any clicks during initial page load
+    (function() {
+      document.addEventListener('click', function(event) {
+        var targetElement = event.target.closest('a');
+        // Only intercept if it's a valid link and NOT inside the draggable toolbar
+        if (targetElement && targetElement.href && !targetElement.closest('[data-drag-controls]')) {
+          event.preventDefault();
+          event.stopPropagation();
+          try {
+            // Resolve relative URLs against the document's base URI (if set) or window location
+            const absoluteUrl = new URL(targetElement.getAttribute('href'), document.baseURI || window.location.href).href;
+            // Use a specific message type for AI HTML navigation
+            window.parent.postMessage({ type: 'aiHtmlNavigation', url: absoluteUrl }, '*');
+            console.log('Intercepted link click (immediate handler):', absoluteUrl);
+          } catch (e) { console.error("Error resolving/posting URL:", e); }
+        }
+      }, true); // Use capture phase to intercept early
+    })();
+  </script>
+ 
+</head>
+<body>
+  <!-- TITLE: 高级杂志风职场推送内容 -->
+<div class="max-w-md mx-auto bg-white shadow-xl overflow-hidden font-geneva">
+  <!-- 头图区域 - 杂志封面风格 -->
+  <div class="bg-black text-white p-8 relative">
+    <div class="absolute top-4 right-4 text-xs text-gray-400">DAY 01</div>
+    <div class="text-xs text-gray-300 mb-2 tracking-widest">WORKPLACE ESSENTIALS</div>
+    <div class="text-2xl font-neuebit font-bold mb-3 leading-tight">職場新人第一課<br>別當透明人</div>
+    <div class="w-12 h-0.5 bg-white mb-4"></div>
+    <div class="text-sm text-gray-200 italic">"融入團隊不是等別人來找你，而是主動讓別人記住你"</div>
+  </div>
+
+  <div class="p-6 space-y-6">
+    <!-- 开篇文字 -->
+    <div class="text-gray-800 leading-relaxed">
+      <p class="text-sm mb-3">剛入職感到被忽視？這很正常。90%的新人都有這個困惑：明明很努力，但感覺自己像隱形人。</p>
+      <p class="text-sm"><span class="bg-yellow-100 px-1">問題不在於你不夠好，而在於你太被動了。</span></p>
+    </div>
+
+    <!-- 核心方法 - 简约高亮 -->
+    <div class="border border-gray-200 p-5 bg-gray-50">
+      <div class="text-center mb-4">
+        <div class="text-lg font-bold text-gray-900 mb-1">3-2-1 法則</div>
+        <div class="text-xs text-gray-600 tracking-wide">TODAY'S ACTION PLAN</div>
+      </div>
+      <div class="grid grid-cols-3 gap-4 text-center">
+        <div>
+          <div class="text-3xl font-light text-gray-900 mb-1">3</div>
+          <div class="text-xs text-gray-600 leading-tight">個同事<br>主動打招呼</div>
+        </div>
+        <div>
+          <div class="text-3xl font-light text-gray-900 mb-1">2</div>
+          <div class="text-xs text-gray-600 leading-tight">個信息<br>記住細節</div>
+        </div>
+        <div>
+          <div class="text-3xl font-light text-gray-900 mb-1">1</div>
+          <div class="text-xs text-gray-600 leading-tight">個問題<br>請教經驗</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 案例故事 -->
+    <div class="text-gray-800 leading-relaxed">
+      <div class="text-sm font-bold text-gray-900 mb-2">真實案例</div>
+      <p class="text-sm mb-3">小王入職第一天坐在角落不敢說話，一週後還是沒人記住他。後來他主動問旁邊同事"這個系統怎麼用"，對方不但教了他，還介紹了其他人認識。</p>
+      <p class="text-sm"><span class="bg-green-100 px-1">一個月後小王成了辦公室最受歡迎的新人。</span></p>
+    </div>
+
+    <!-- 理论支撑 - 简约设计 -->
+    <div class="border-l-2 border-gray-300 pl-4">
+      <div class="text-xs text-gray-500 mb-1">PSYCHOLOGY</div>
+      <div class="text-sm text-gray-700">心理學上叫"曝光效應"——人們會對經常見到的事物產生好感。<span class="bg-blue-100 px-1">主動互動=增加曝光=建立好印象。</span></div>
+    </div>
+
+    <!-- 音频推荐 - 杂志风格 -->
+    <div class="bg-black text-white p-4">
+      <div class="flex justify-between items-start mb-2">
+        <div class="text-xs text-gray-400 tracking-widest">RECOMMENDED LISTENING</div>
+        <div class="text-xs text-gray-400">6 MIN</div>
+      </div>
+      <div class="text-sm font-bold mb-1">職場第一印象法則</div>
+      <div class="text-xs text-gray-300 mb-3">李開復 × 新人如何在一週內讓同事記住你</div>
+      <button class="text-xs border border-white px-3 py-1 hover:bg-white hover:text-black transition-colors">
+        ▶ 立即收聽
+      </button>
+    </div>
+
+    <!-- 行动号召 -->
+    <div class="text-center py-4">
+      <div class="text-lg font-bold text-gray-900 mb-2">現在就去跟一個同事說話吧</div>
+      <button class="bg-black text-white px-6 py-2 text-sm hover:bg-gray-800 transition-colors">
+        完成今日挑戰
+      </button>
+    </div>
+
+    <!-- 预告 -->
+    <div class="text-center border-t border-gray-200 pt-4">
+      <div class="text-xs text-gray-500 tracking-widest mb-1">TOMORROW</div>
+      <div class="text-sm text-gray-700">如何快速摸清辦公室潛規則</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>职场成长AI助手 - Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 自定义样式 */
+        .chat-bubble {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #6b7280;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        .typing-dot:nth-child(3) { animation-delay: 0s; }
+        
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+        
+        .message-content {
+            line-height: 1.6;
+        }
+        
+        .message-content ul {
+            margin: 0.5rem 0;
+            padding-left: 1.5rem;
+        }
+        
+        .message-content li {
+            margin: 0.25rem 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="max-w-4xl mx-auto px-4 py-6">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-black text-white rounded-full text-2xl font-bold mb-4">
+                AI
+            </div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">职场成长AI助手</h1>
+            <p class="text-gray-600 max-w-2xl mx-auto">基于《远见》《精力管理》《掌控习惯》等专业书籍，为你提供个性化职场建议</p>
+        </header>
+
+        <!-- Status Indicator -->
+        <div id="statusIndicator" class="mb-4 text-center">
+            <div id="connectionStatus" class="inline-flex items-center px-3 py-1 rounded-full text-sm">
+                <div class="w-2 h-2 rounded-full mr-2"></div>
+                <span>正在连接...</span>
+            </div>
+        </div>
+
+        <!-- Main Content Container -->
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <!-- Default Chat View -->
+            <div id="chatView" class="block">
+                <!-- Chat Messages -->
+                <div id="chatContainer" class="h-96 overflow-y-auto p-6 space-y-4">
+                    <!-- Messages will be added dynamically -->
+                </div>
+
+                <!-- Input Area -->
+                <div class="border-t bg-gray-50 p-4">
+                    <div class="flex space-x-3">
+                        <input 
+                            type="text" 
+                            id="messageInput" 
+                            placeholder="请输入你想要的职场成长计划，比如：帮我制定新人快速融入团队的7天计划"
+                            class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                            onkeypress="handleKeyPress(event)"
+                        >
+                        <button 
+                            onclick="sendMessage()" 
+                            id="sendButton"
+                            class="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            生成计划
+                        </button>
+                    </div>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        <button onclick="quickSend('帮我制定新人快速融入团队的7天计划')" class="text-xs bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-full transition-colors">
+                            新人融入团队计划
+                        </button>
+                        <button onclick="quickSend('制定高效汇报工作的训练计划')" class="text-xs bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-full transition-colors">
+                            高效汇报训练
+                        </button>
+                        <button onclick="quickSend('压力管理和情绪调节的实践计划')" class="text-xs bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-full transition-colors">
+                            压力管理计划
+                        </button>
+                        <button onclick="quickSend('职场人脉建设的行动方案')" class="text-xs bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-full transition-colors">
+                            人脉建设方案
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Animation View -->
+            <div id="loadingView" class="hidden p-8 text-center h-96 flex flex-col justify-center">
+                <div class="mb-6">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-black text-white rounded-full text-2xl font-bold mb-4 animate-pulse">
+                        📚
+                    </div>
+                    <div class="text-xl font-bold text-gray-900 mb-2">正在为你精选全球好书</div>
+                    <div class="text-gray-600 mb-4">挖掘热门播客和专业内容</div>
+                </div>
+                
+                <div class="space-y-3 mb-6">
+                    <div class="flex items-center justify-center space-x-2">
+                        <div class="w-2 h-2 bg-black rounded-full animate-bounce"></div>
+                        <div class="w-2 h-2 bg-black rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                        <div class="w-2 h-2 bg-black rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                    </div>
+                    <div id="loadingMessage" class="text-sm text-gray-500">正在分析你的需求...</div>
+                </div>
+                
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="text-xs text-gray-400 mb-2">即将为你生成</div>
+                    <div class="text-sm font-medium text-gray-700">个性化职场成长计划</div>
+                </div>
+            </div>
+
+            <!-- Subscription List View -->
+            <div id="subscriptionView" class="hidden">
+                <div class="p-6 border-b">
+                    <div class="flex justify-between items-center mb-3">
+                        <button onclick="startNewConversation()" class="text-sm text-gray-500 hover:text-gray-700 flex items-center">
+                            ← 生成新计划
+                        </button>
+                        <button onclick="clearChat()" class="text-xs text-gray-400 hover:text-gray-600">
+                            清空对话
+                        </button>
+                    </div>
+                    <div id="planTitle" class="text-2xl font-bold text-gray-900 mb-2">职场成长计划</div>
+                    <div id="planDescription" class="text-gray-600 mb-4">为你量身定制的职场技能提升方案</div>
+                    <div class="flex items-center space-x-4 text-sm text-gray-500">
+                        <span id="planDuration">7天计划</span>
+                        <span>•</span>
+                        <span>每日精选内容</span>
+                    </div>
+                </div>
+                
+                <div class="h-80 overflow-y-auto">
+                    <div id="dailyContentList" class="p-6 space-y-3">
+                        <!-- Daily content items will be added here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Detail View -->
+            <div id="contentDetailView" class="hidden h-96 overflow-y-auto">
+                <!-- Content detail will be rendered here -->
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="text-center mt-8">
+            <div class="text-sm text-gray-500 mb-4">
+                <p>本AI助手基于专业职场书籍训练，提供的建议仅供参考</p>
+            </div>
+            <div class="flex justify-center space-x-4 text-xs text-gray-400">
+                <span>对话数: <span id="messageCount">0</span></span>
+                <span>|</span>
+                <span>响应时间: <span id="avgResponseTime">--</span>ms</span>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 屏蔽Tailwind生产环境警告
+        if (typeof console !== 'undefined') {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+                if (args[0] && args[0].includes('cdn.tailwindcss.com should not be used in production')) {
+                    return;
+                }
+                originalWarn.apply(console, args);
+            };
+        }
+
+        // Dify API 配置
+        const DIFY_CONFIG = {
+            apiKey: 'app-NYGCC4ds6K1p6hNltnGLo1lT',
+            baseUrl: 'http://ops.pd.ximalaya.local/dify/v1',
+        };
+
+        // 全局状态管理 - 改进版
+        let conversationId = null;
+        let isLoading = false;
+        let messageCount = 0;
+        let responseTimes = [];
+        let retryCount = 0;
+        const MAX_RETRIES = 3;
+        
+        // 新增：计划数据管理
+        let currentPlan = null;
+        let currentView = 'chat'; // 'chat', 'loading', 'subscription', 'detail'
+        
+        // 多轮对话状态管理
+        let conversationPhase = 'initial'; // 'initial', 'collecting', 'confirming', 'generating', 'completed'
+        let planGenerationInProgress = false;
+
+        // 本地存储键名
+        const STORAGE_KEYS = {
+            CONVERSATION_ID: 'dify_conversation_id',
+            MESSAGE_HISTORY: 'dify_message_history',
+            USER_ID: 'dify_user_id'
+        };
+
+        // 生成唯一用户ID
+        function generateUserId() {
+            return 'user-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now();
+        }
+
+        // 获取或创建用户ID
+        function getUserId() {
+            let userId = localStorage.getItem(STORAGE_KEYS.USER_ID);
+            if (!userId) {
+                userId = generateUserId();
+                localStorage.setItem(STORAGE_KEYS.USER_ID, userId);
+            }
+            return userId;
+        }
+
+        // 保存会话ID到本地存储
+        function saveConversationId(id) {
+            conversationId = id;
+            if (id) {
+                localStorage.setItem(STORAGE_KEYS.CONVERSATION_ID, id);
+                console.log('保存会话ID到本地存储:', id);
+            }
+        }
+
+        // 从本地存储加载会话ID
+        function loadConversationId() {
+            const savedId = localStorage.getItem(STORAGE_KEYS.CONVERSATION_ID);
+            if (savedId) {
+                conversationId = savedId;
+                console.log('从本地存储加载会话ID:', savedId);
+            }
+            return savedId;
+        }
+
+        // 清除会话数据
+        function clearConversationData() {
+            conversationId = null;
+            localStorage.removeItem(STORAGE_KEYS.CONVERSATION_ID);
+            localStorage.removeItem(STORAGE_KEYS.MESSAGE_HISTORY);
+            console.log('清除会话数据');
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            // 加载保存的会话ID
+            loadConversationId();
+            
+            document.getElementById('messageInput').focus();
+            updateConnectionStatus('loading', '初始化中...');
+            
+            // 延迟测试连接，避免页面加载时的网络问题
+            setTimeout(() => {
+                testConnection();
+            }, 500);
+        }
+
+        // 测试连接功能 - 改进版
+        async function testConnection() {
+            try {
+                updateConnectionStatus('loading', '测试连接中...');
+                
+                // 使用简单的参数测试连接
+                const userId = getUserId();
+                const testResponse = await fetch(`${DIFY_CONFIG.baseUrl}/chat-messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${DIFY_CONFIG.apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        inputs: {
+                            user_id: userId
+                        },
+                        query: "hello",
+                        response_mode: "blocking",
+                        user: userId
+                    })
+                });
+                
+                if (testResponse.ok) {
+                    const data = await testResponse.json();
+                    // 如果测试成功，保存返回的conversation_id
+                    if (data.conversation_id) {
+                        saveConversationId(data.conversation_id);
+                    }
+                    updateConnectionStatus('connected', 'AI助手已就绪');
+                    retryCount = 0;
+                    
+                    // 添加欢迎消息到界面
+                    addMessage("你好！我是你的职场成长AI助手。\n\n我可以为你生成个性化的职场技能提升计划，比如：\n• 新人快速融入团队计划\n• 高效汇报训练方案\n• 压力管理实践指南\n• 职场人脉建设策略\n\n请告诉我你想要什么样的计划！", 'assistant');
+                    
+                } else {
+                    const errorText = await testResponse.text();
+                    console.error('连接测试失败:', errorText);
+                    throw new Error(`连接测试失败: ${testResponse.status} - ${errorText}`);
+                }
+            } catch (error) {
+                console.error('连接测试失败:', error);
+                updateConnectionStatus('error', '连接失败');
+                
+                // 根据错误类型提供不同的解决建议
+                let errorMsg = '⚠️ 连接失败。\n\n';
+                if (error.message.includes('404')) {
+                    errorMsg += '可能原因：\n1. API端点URL不正确\n2. 应用ID或API密钥有误\n3. Dify服务未正确配置';
+                } else if (error.message.includes('fetch')) {
+                    errorMsg += '可能原因：\n1. 网络连接问题\n2. 服务器地址不可访问\n3. 防火墙或代理阻止\n4. CORS跨域限制';
+                } else {
+                    errorMsg += `错误详情: ${error.message}`;
+                }
+                
+                addMessage(errorMsg, 'assistant', true);
+            }
+        }
+
+        function updateConnectionStatus(status = 'connected', message = 'AI助手已就绪') {
+            const statusEl = document.getElementById('connectionStatus');
+            if (!statusEl) return;
+            
+            const dot = statusEl.querySelector('div');
+            const text = statusEl.querySelector('span');
+            
+            if (!dot || !text) return;
+            
+            // 清除现有样式
+            statusEl.className = 'inline-flex items-center px-3 py-1 rounded-full text-sm';
+            dot.className = 'w-2 h-2 rounded-full mr-2';
+            
+            switch(status) {
+                case 'connected':
+                    statusEl.classList.add('bg-green-100', 'text-green-800');
+                    dot.classList.add('bg-green-500');
+                    break;
+                case 'loading':
+                    statusEl.classList.add('bg-yellow-100', 'text-yellow-800');
+                    dot.classList.add('bg-yellow-500');
+                    break;
+                case 'error':
+                    statusEl.classList.add('bg-red-100', 'text-red-800');
+                    dot.classList.add('bg-red-500');
+                    break;
+                default:
+                    statusEl.classList.add('bg-gray-100', 'text-gray-800');
+                    dot.classList.add('bg-gray-500');
+            }
+            
+            text.textContent = message;
+        }
+
+        // 处理回车键发送
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // 快速发送预设问题
+        function quickSend(message) {
+            document.getElementById('messageInput').value = message;
+            sendMessage();
+        }
+
+        // 视图切换函数
+        function showView(viewName) {
+            const views = ['chatView', 'loadingView', 'subscriptionView', 'contentDetailView'];
+            views.forEach(view => {
+                const element = document.getElementById(view);
+                if (element) {
+                    element.classList.add('hidden');
+                }
+            });
+            
+            const targetView = document.getElementById(viewName);
+            if (targetView) {
+                targetView.classList.remove('hidden');
+            }
+            
+            currentView = viewName.replace('View', '');
+        }
+
+        function showChatView() {
+            showView('chatView');
+        }
+
+        // 重置对话状态
+        function resetConversationState() {
+            conversationPhase = 'initial';
+            planGenerationInProgress = false;
+            currentPlan = null;
+        }
+
+        // 开始新对话
+        function startNewConversation() {
+            resetConversationState();
+            showChatView();
+            document.getElementById('messageInput').focus();
+        }
+
+        function showLoadingView() {
+            showView('loadingView');
+            // 启动加载消息轮播
+            startLoadingMessages();
+        }
+
+        function showSubscriptionView() {
+            showView('subscriptionView');
+        }
+
+        function showContentDetailView(dayIndex) {
+            showView('contentDetailView');
+            renderContentDetail(dayIndex);
+        }
+
+        // 加载消息轮播 - 根据对话阶段智能显示
+        function startLoadingMessages() {
+            const messagesByPhase = {
+                collecting: [
+                    '正在分析你的需求...',
+                    '理解你的职场目标...',
+                    '评估你的当前情况...'
+                ],
+                confirming: [
+                    '正在确认计划细节...',
+                    '调整个性化设置...',
+                    '准备开始生成...'
+                ],
+                generating: [
+                    '正在为你精选全球好书...',
+                    '挖掘热门播客内容...',
+                    '整合专业知识点...',
+                    '定制个性化方案...',
+                    '生成每日行动指南...',
+                    '即将完成你的计划...'
+                ]
+            };
+            
+            const messages = messagesByPhase[conversationPhase] || messagesByPhase.generating;
+            let index = 0;
+            const messageEl = document.getElementById('loadingMessage');
+            
+            // 立即显示第一条消息
+            if (messageEl) {
+                messageEl.textContent = messages[0];
+            }
+            
+            const interval = setInterval(() => {
+                if (currentView !== 'loading') {
+                    clearInterval(interval);
+                    return;
+                }
+                
+                index = (index + 1) % messages.length;
+                if (messageEl) {
+                    messageEl.textContent = messages[index];
+                }
+            }, 2000);
+        }
+
+        // 发送消息 - 改进版支持多轮对话
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message || isLoading) return;
+
+            // 清空输入框
+            input.value = '';
+            
+            // 添加用户消息到聊天
+            addMessage(message, 'user');
+            
+            // 根据对话阶段决定UI显示
+            if (conversationPhase === 'initial' && !planGenerationInProgress) {
+                // 第一次询问，判断是否可能开始计划生成
+                if (isPlanGenerationRequest(message)) {
+                    planGenerationInProgress = true;
+                    conversationPhase = 'collecting';
+                }
+            }
+            
+            // 显示适当的加载状态
+            if (planGenerationInProgress && shouldShowLoadingAnimation()) {
+                showLoadingView();
+                updateConnectionStatus('loading', getLoadingMessage());
+            } else {
+                showTypingIndicator();
+                updateConnectionStatus('loading', '正在思考...');
+            }
+            
+            const startTime = Date.now();
+            
+            try {
+                isLoading = true;
+                updateSendButton(true);
+                
+                // 调用Dify API - 使用改进的重试机制
+                const response = await callDifyAPIWithRetry(message);
+                
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+                responseTimes.push(responseTime);
+                
+                // 处理响应 - 支持多轮对话
+                if (response && response.answer) {
+                    // 保存新的conversation_id（如果有）
+                    if (response.conversation_id) {
+                        saveConversationId(response.conversation_id);
+                    }
+                    
+                    // 根据对话阶段和内容判断下一步
+                    handleConversationResponse(response.answer, message);
+                    
+                } else {
+                    // 回到聊天视图显示错误
+                    if (currentView === 'loading') {
+                        showChatView();
+                    }
+                    removeTypingIndicator();
+                    addMessage('抱歉，我没有收到有效的回复。请重试。', 'assistant', true);
+                }
+                
+                // 更新统计
+                messageCount++;
+                updateStats();
+                updateConnectionStatus('connected', 'AI助手已就绪');
+                
+                // 重置重试计数
+                retryCount = 0;
+                
+            } catch (error) {
+                console.error('API调用失败:', error);
+                
+                // 回到聊天视图显示错误
+                showChatView();
+                
+                // 根据错误类型提供不同的处理
+                let errorMessage = '抱歉，我现在无法生成计划。';
+                let shouldClearConversation = false;
+                
+                if (error.message.includes('Conversation Not Exists')) {
+                    errorMessage = '⚠️ 会话已过期，正在创建新的对话...';
+                    shouldClearConversation = true;
+                } else if (error.message.includes('401')) {
+                    errorMessage = '⚠️ API密钥验证失败，请检查配置。';
+                } else if (error.message.includes('404')) {
+                    errorMessage = '⚠️ API端点不存在，请检查服务器配置。';
+                    shouldClearConversation = true;
+                } else if (error.message.includes('429')) {
+                    errorMessage = '⚠️ 请求过于频繁，请稍后再试。';
+                } else if (error.message.includes('fetch') || error.message.includes('network')) {
+                    errorMessage = '⚠️ 网络连接失败，请检查网络状态或稍后重试。';
+                } else {
+                    errorMessage = `⚠️ 请求失败: ${error.message}`;
+                }
+                
+                addMessage(errorMessage, 'assistant', true);
+                updateConnectionStatus('error', '连接失败');
+                
+                // 如果是会话相关错误，清除会话数据并重试
+                if (shouldClearConversation) {
+                    clearConversationData();
+                    
+                    // 3秒后自动重试
+                    setTimeout(async () => {
+                        try {
+                            addMessage('正在重新建立连接...', 'assistant');
+                            showTypingIndicator();
+                            
+                            const retryResponse = await callDifyAPI(message);
+                            removeTypingIndicator();
+                            
+                            if (retryResponse && retryResponse.answer) {
+                                addMessage(retryResponse.answer, 'assistant');
+                                if (retryResponse.conversation_id) {
+                                    saveConversationId(retryResponse.conversation_id);
+                                }
+                                updateConnectionStatus('connected', 'AI助手已就绪');
+                            }
+                        } catch (retryError) {
+                            console.error('重试失败:', retryError);
+                            removeTypingIndicator();
+                            addMessage('重新连接失败，请稍后手动重试。', 'assistant', true);
+                        }
+                    }, 3000);
+                }
+                
+            } finally {
+                isLoading = false;
+                updateSendButton(false);
+            }
+        }
+
+        // 带重试机制的API调用 - 改进版
+        async function callDifyAPIWithRetry(query) {
+            let lastError;
+            
+            for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+                try {
+                    console.log(`尝试第 ${attempt} 次调用API...`);
+                    
+                    // 如果不是第一次尝试，等待一下再重试
+                    if (attempt > 1) {
+                        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+                    }
+                    
+                    const response = await callDifyAPI(query);
+                    console.log(`API调用成功，第 ${attempt} 次尝试`);
+                    return response;
+                    
+                } catch (error) {
+                    console.error(`第 ${attempt} 次尝试失败:`, error);
+                    lastError = error;
+                    
+                    // 如果是会话不存在的错误，清除会话数据后重试
+                    if (error.message.includes('Conversation Not Exists') && attempt < MAX_RETRIES) {
+                        console.log('检测到会话不存在，清除会话数据后重试...');
+                        clearConversationData();
+                        continue;
+                    }
+                    
+                    // 如果是最后一次尝试，抛出错误
+                    if (attempt === MAX_RETRIES) {
+                        throw error;
+                    }
+                    
+                    // 更新状态显示重试信息
+                    updateConnectionStatus('loading', `重试中... (${attempt}/${MAX_RETRIES})`);
+                }
+            }
+            
+            throw lastError;
+        }
+
+        // 调用Dify API - 改进版
+        async function callDifyAPI(query) {
+            const url = `${DIFY_CONFIG.baseUrl}/chat-messages`;
+            const userId = getUserId();
+            
+            const requestBody = {
+                inputs: {
+                    user_id: userId
+                },
+                query: query,
+                response_mode: "blocking",
+                user: userId
+            };
+
+            // 如果有conversation_id，添加到请求中
+            if (conversationId) {
+                requestBody.conversation_id = conversationId;
+                console.log('使用现有会话ID:', conversationId);
+            } else {
+                console.log('创建新会话');
+            }
+
+            console.log('发送请求到:', url);
+            console.log('请求体:', requestBody);
+            console.log('用户ID:', userId);
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${DIFY_CONFIG.apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            console.log('响应状态:', response.status);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API错误响应:', errorText);
+                
+                // 尝试解析错误信息
+                let errorData;
+                try {
+                    errorData = JSON.parse(errorText);
+                } catch (e) {
+                    errorData = { message: errorText };
+                }
+                
+                if (response.status === 401) {
+                    throw new Error('API密钥无效或已过期');
+                } else if (response.status === 403) {
+                    throw new Error('API访问被拒绝，请检查权限');
+                } else if (response.status === 404) {
+                    if (errorData.message && errorData.message.includes('Conversation Not Exists')) {
+                        throw new Error('Conversation Not Exists');
+                    } else {
+                        throw new Error('API端点不存在，请检查URL配置');
+                    }
+                } else if (response.status === 500) {
+                    throw new Error('服务器内部错误，请稍后重试');
+                } else if (response.status === 429) {
+                    throw new Error('请求过于频繁，请稍后重试');
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${errorData.message || response.statusText}`);
+                }
+            }
+
+            const data = await response.json();
+            console.log('API响应数据:', data);
+            
+            // 保存conversation_id用于后续对话
+            if (data.conversation_id) {
+                saveConversationId(data.conversation_id);
+                console.log('保存新会话ID:', data.conversation_id);
+            }
+
+            return data;
+        }
+
+        // 添加消息到聊天界面
+        function addMessage(content, role, isError = false) {
+            const chatContainer = document.getElementById('chatContainer');
+            if (!chatContainer) return;
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-bubble';
+            
+            if (role === 'user') {
+                messageDiv.innerHTML = `
+                    <div class="flex items-start space-x-3 justify-end">
+                        <div class="flex-1 text-right">
+                            <div class="bg-black text-white rounded-lg p-3 max-w-2xl ml-auto shadow-md">
+                                <div class="text-sm message-content">${escapeHtml(content)}</div>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0 w-8 h-8 bg-gray-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                            你
+                        </div>
+                    </div>
+                `;
+            } else {
+                const bgColor = isError ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200';
+                const textColor = isError ? 'text-red-800' : 'text-gray-800';
+                
+                messageDiv.innerHTML = `
+                    <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-bold">
+                            AI
+                        </div>
+                        <div class="flex-1">
+                            <div class="${bgColor} rounded-lg p-4 max-w-2xl shadow-sm border">
+                                <div class="text-sm ${textColor} message-content">${formatMessage(content)}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // 显示输入指示器
+        function showTypingIndicator() {
+            const chatContainer = document.getElementById('chatContainer');
+            if (!chatContainer) return;
+            
+            const startTime = Date.now();
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.className = 'chat-bubble';
+            typingDiv.innerHTML = `
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-bold">
+                        AI
+                    </div>
+                    <div class="flex-1">
+                        <div class="bg-white rounded-lg p-3 max-w-md border shadow-sm">
+                            <div class="typing-indicator">
+                                <div class="typing-dot"></div>
+                                <div class="typing-dot"></div>
+                                <div class="typing-dot"></div>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-2" id="waitingTime">等待中...</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 添加等待时间更新
+            const waitingTimeEl = typingDiv.querySelector('#waitingTime');
+            const timer = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                waitingTimeEl.textContent = `等待中... ${elapsed}s`;
+            }, 1000);
+            
+            // 保存timer引用以便清除
+            typingDiv.dataset.timer = timer;
+            
+            chatContainer.appendChild(typingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // 移除输入指示器
+        function removeTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                // 清除定时器
+                if (typingIndicator.dataset.timer) {
+                    clearInterval(typingIndicator.dataset.timer);
+                }
+                typingIndicator.remove();
+            }
+        }
+
+        // 更新发送按钮状态
+        function updateSendButton(loading) {
+            const button = document.getElementById('sendButton');
+            const input = document.getElementById('messageInput');
+            
+            if (!button || !input) return;
+            
+            if (loading) {
+                button.textContent = '发送中...';
+                button.disabled = true;
+                input.disabled = true;
+            } else {
+                button.textContent = '发送';
+                button.disabled = false;
+                input.disabled = false;
+            }
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            const messageCountEl = document.getElementById('messageCount');
+            const avgResponseTimeEl = document.getElementById('avgResponseTime');
+            
+            if (messageCountEl) {
+                messageCountEl.textContent = messageCount;
+            }
+            
+            if (avgResponseTimeEl && responseTimes.length > 0) {
+                const avgTime = Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length);
+                avgResponseTimeEl.textContent = avgTime;
+            }
+        }
+
+        // 转义HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 格式化消息
+        function formatMessage(text) {
+            text = escapeHtml(text);
+            text = text.replace(/\n/g, '<br>');
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            text = text.replace(/^- (.*$)/gm, '• $1');
+            return text;
+        }
+
+        // 清空聊天 - 改进版
+        function clearChat() {
+            const chatContainer = document.getElementById('chatContainer');
+            if (!chatContainer) return;
+            
+            // 清除会话数据和对话状态
+            clearConversationData();
+            resetConversationState();
+            
+            // 回到聊天视图
+            showChatView();
+            
+            chatContainer.innerHTML = `
+                <div class="chat-bubble">
+                    <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-bold">
+                            AI
+                        </div>
+                        <div class="flex-1">
+                            <div class="bg-white rounded-lg p-4 max-w-2xl shadow-sm border">
+                                <div class="text-sm text-gray-800 message-content">
+                                    <p>对话已清空，我们重新开始吧！请告诉我你想要什么样的职场成长计划！</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 重置状态
+            messageCount = 0;
+            responseTimes = [];
+            retryCount = 0;
+            updateStats();
+            updateConnectionStatus('connected', 'AI助手已就绪');
+        }
+
+        // 重新连接功能 - 改进版
+        function reconnect() {
+            console.log('尝试重新连接...');
+            clearConversationData();
+            updateConnectionStatus('loading', '重新连接中...');
+            
+            // 延迟重新测试连接
+            setTimeout(() => {
+                testConnection();
+            }, 1000);
+        }
+
+        // 添加调试功能
+        function debugInfo() {
+            console.log('=== 调试信息 ===');
+            console.log('Conversation ID:', conversationId);
+            console.log('User ID:', getUserId());
+            console.log('API Config:', DIFY_CONFIG);
+            console.log('Local Storage:', {
+                conversationId: localStorage.getItem(STORAGE_KEYS.CONVERSATION_ID),
+                userId: localStorage.getItem(STORAGE_KEYS.USER_ID)
+            });
+            console.log('===============');
+        }
+
+        // 判断是否为计划生成请求
+        function isPlanGenerationRequest(message) {
+            const planKeywords = ['计划', '方案', '训练', '指导', '帮助', '制定', '学习', '提升'];
+            const workplaceKeywords = ['职场', '工作', '团队', '汇报', '沟通', '压力', '人脉', '新人'];
+            
+            return planKeywords.some(keyword => message.includes(keyword)) && 
+                   workplaceKeywords.some(keyword => message.includes(keyword));
+        }
+
+        // 判断是否应该显示加载动画
+        function shouldShowLoadingAnimation() {
+            return conversationPhase === 'generating' || 
+                   (conversationPhase === 'confirming' && isResponseLikelyFinalPlan());
+        }
+
+        // 获取加载消息
+        function getLoadingMessage() {
+            switch(conversationPhase) {
+                case 'collecting': return '正在收集需求...';
+                case 'confirming': return '正在确认细节...';
+                case 'generating': return '正在生成个性化计划...';
+                default: return '正在处理...';
+            }
+        }
+
+        // 检查回复是否可能是最终计划
+        function isResponseLikelyFinalPlan() {
+            // 这个函数会在收到回复后调用，暂时返回false
+            return false;
+        }
+
+        // 处理对话响应的核心逻辑
+        function handleConversationResponse(answer, userMessage) {
+            console.log('=== 处理对话响应 ===');
+            console.log('回复长度:', answer.length);
+            console.log('当前对话阶段:', conversationPhase);
+            console.log('回复前100字符:', answer.substring(0, 100));
+            
+            // 移除加载指示器
+            removeTypingIndicator();
+            
+            // 检查是否是最终的计划内容
+            const isFinal = isFinalPlan(answer);
+            console.log('是否为最终计划:', isFinal);
+            
+            if (isFinal) {
+                console.log('✅ 识别为最终计划，开始解析和渲染');
+                // 这是最终计划，切换到订阅视图
+                conversationPhase = 'completed';
+                planGenerationInProgress = false;
+                
+                currentPlan = parsePlanData(answer, userMessage);
+                console.log('解析后的计划数据:', currentPlan);
+                
+                renderPlanList(currentPlan);
+                showSubscriptionView();
+                
+            } else {
+                console.log('❌ 未识别为最终计划，继续对话');
+                // 这是中间对话，继续在聊天视图显示
+                if (currentView === 'loading') {
+                    showChatView();
+                }
+                
+                addMessage(answer, 'assistant');
+                
+                // 更新对话阶段
+                updateConversationPhase(answer);
+                
+                // 如果检测到即将生成最终计划，准备显示加载动画
+                if (isAboutToGeneratePlan(answer)) {
+                    conversationPhase = 'generating';
+                }
+            }
+            
+            console.log('=== 响应处理完成 ===');
+        }
+
+        // 检查是否为最终计划内容 - 针对dify格式优化（更宽松的检测）
+        function isFinalPlan(answer) {
+            console.log('检查是否为最终计划，内容长度:', answer.length);
+            
+            // 1. 检查是否包含计划名称格式
+            const hasPlanTitle = /计划名称[：:]\s*《[^》]+》/.test(answer);
+            
+            // 2. 检查是否包含多个Day结构（降低阈值）
+            const dayPattern = /Day\s*\d+[·\s]/g;
+            const dayMatches = answer.match(dayPattern);
+            const hasDayStructure = dayMatches && dayMatches.length >= 1; // 降低到1个即可
+            
+            // 3. 检查是否包含dify的结构化字段（【】格式）
+            const bracketFields = ['【标题】', '【金句】', '【导语】', '【关键原则】', '【真实案例】', '【今日挑战】'];
+            const structuredFieldsCount = bracketFields.filter(field => answer.includes(field)).length;
+            const hasStructuredContent = structuredFieldsCount >= 3; // 降低到3个即可
+            
+            // 4. 检查是否包含分隔符
+            const hasSeparators = answer.includes('—————————');
+            
+            // 5. 检查内容长度（降低阈值）
+            const isLongContent = answer.length > 1000; // 降低到1000字符
+            
+            // 6. 检查是否包含目标、预期效果等计划要素
+            const hasPlanElements = answer.includes('目标') || answer.includes('预期效果');
+            
+            // 7. 新增：检查是否包含第X天、Day X等模式
+            const hasChapterPattern = /第\d+天|Day\s*\d+/.test(answer);
+            
+            // 8. 新增：检查是否包含多个【】字段
+            const bracketFieldCount = (answer.match(/【[^】]+】/g) || []).length;
+            const hasManyBrackets = bracketFieldCount >= 5;
+            
+            // 更宽松的判断条件
+            const isFinal = hasPlanTitle || // 有计划名称就认为是最终计划
+                           (hasStructuredContent && isLongContent) || // 有结构化字段且长度足够
+                           (hasSeparators && hasChapterPattern) || // 有分隔符且有章节模式
+                           (hasManyBrackets && isLongContent) || // 有很多【】字段且内容长
+                           (hasDayStructure && structuredFieldsCount >= 2); // 有Day结构且有一些结构化字段
+                           
+            console.log('最终计划检查结果:', {
+                hasPlanTitle,
+                hasDayStructure,
+                dayCount: dayMatches ? dayMatches.length : 0,
+                hasStructuredContent,
+                structuredFieldsCount,
+                hasSeparators,
+                isLongContent,
+                hasPlanElements,
+                hasChapterPattern,
+                hasManyBrackets,
+                bracketFieldCount,
+                isFinal
+            });
+            
+            return isFinal;
+        }
+
+        // 更新对话阶段
+        function updateConversationPhase(answer) {
+            if (answer.includes('还需要') || answer.includes('请告诉我') || answer.includes('想了解')) {
+                conversationPhase = 'collecting';
+            } else if (answer.includes('确认') || answer.includes('开始生成') || answer.includes('准备为你')) {
+                conversationPhase = 'confirming';
+            }
+        }
+
+        // 检查是否即将生成计划
+        function isAboutToGeneratePlan(answer) {
+            const generationPhrases = [
+                '开始为你生成', '正在制定', '马上为你定制', 
+                '开始创建', '即将生成', '准备生成'
+            ];
+            return generationPhrases.some(phrase => answer.includes(phrase));
+        }
+
+        // 解析dify返回的计划数据 - 针对实际格式优化
+        function parsePlanData(rawContent, userQuery) {
+            console.log('开始解析dify内容，长度:', rawContent.length);
+            
+            // 基本计划信息
+            const plan = {
+                title: '职场成长计划',
+                description: '基于专业书籍和播客内容定制的职场成长方案',
+                duration: '7天计划',
+                days: []
+            };
+            
+            try {
+                // 解析计划标题
+                const titleMatch = rawContent.match(/计划名称[：:]\s*《([^》]+)》/);
+                if (titleMatch) {
+                    plan.title = titleMatch[1];
+                }
+                
+                // 解析目标描述
+                const goalMatch = rawContent.match(/目标[：:]\s*([\s\S]*?)(?=预期效果|—————————)/);
+                if (goalMatch) {
+                    plan.description = goalMatch[1].trim().replace(/\n/g, ' ');
+                }
+                
+                // 按分隔符切分每日内容（修复：dify实际没有使用分隔符）
+                // 直接按【标题】字段来分割每日内容
+                const titlePattern = /【标题】/g;
+                const titleMatches = [...rawContent.matchAll(titlePattern)];
+                console.log('找到', titleMatches.length, '个【标题】标记');
+                
+                let dailySections = [];
+                if (titleMatches.length > 0) {
+                    // 第一部分：开头到第一个【标题】
+                    const firstTitlePos = titleMatches[0].index;
+                    dailySections.push(rawContent.substring(0, firstTitlePos));
+                    
+                    // 每日部分：从一个【标题】到下一个【标题】
+                    for (let i = 0; i < titleMatches.length; i++) {
+                        const start = titleMatches[i].index;
+                        const end = i + 1 < titleMatches.length ? titleMatches[i + 1].index : rawContent.length;
+                        dailySections.push(rawContent.substring(start, end));
+                    }
+                } else {
+                    // 如果没有找到【标题】，尝试用其他分隔符
+                    dailySections = rawContent.split(/—————————+/);
+                }
+                
+                console.log('分割后共', dailySections.length, '个部分');
+                
+                // 跳过第一部分（计划介绍），解析每日内容
+                for (let i = 1; i < dailySections.length; i++) {
+                    const section = dailySections[i].trim();
+                    if (section) {
+                        const dayData = parseDifySectionContent(section, i);
+                        if (dayData) {
+                            plan.days.push(dayData);
+                        }
+                    }
+                }
+                
+                // 如果没有解析到内容，生成默认数据
+                if (plan.days.length === 0) {
+                    console.warn('未解析到每日内容，生成默认数据');
+                    plan.days = generateDefaultPlan(userQuery);
+                }
+                
+            } catch (error) {
+                console.error('解析计划数据失败:', error);
+                plan.days = generateDefaultPlan(userQuery);
+            }
+            
+            console.log('解析完成，共', plan.days.length, '天内容');
+            return plan;
+        }
+
+        function extractPlanTitle(userQuery) {
+            if (userQuery.includes('新人') || userQuery.includes('融入')) {
+                return '新人快速融入团队计划';
+            } else if (userQuery.includes('汇报') || userQuery.includes('沟通')) {
+                return '高效汇报训练计划';
+            } else if (userQuery.includes('压力') || userQuery.includes('情绪')) {
+                return '压力管理实践计划';
+            } else if (userQuery.includes('人脉') || userQuery.includes('关系')) {
+                return '职场人脉建设方案';
+            } else {
+                return '职场成长计划';
+            }
+        }
+
+        // 解析单个章节内容 - 针对dify格式
+        function parseDifySectionContent(sectionText, dayIndex) {
+            console.log(`解析第${dayIndex}天内容，长度:`, sectionText.length);
+            
+            const dayData = {
+                day: dayIndex,
+                标题: '',
+                金句: '',
+                导语: '',
+                关键原则: '',
+                真实案例: '',
+                为什么有效: '',
+                相关推荐: '',
+                今日挑战: '',
+                明日预告: ''
+            };
+            
+            // 使用正则表达式提取【字段名】内容的格式
+            const fieldPatterns = {
+                '标题': /【标题】\s*(.*?)(?=【|$)/s,
+                '金句': /【金句】\s*(.*?)(?=【|$)/s,
+                '导语': /【导语】\s*(.*?)(?=【|$)/s,
+                '关键原则': /【关键原则】\s*(.*?)(?=【|$)/s,
+                '真实案例': /【真实案例】\s*(.*?)(?=【|$)/s,
+                '为什么有效': /【为什么有效】\s*(.*?)(?=【|$)/s,
+                '相关推荐': /【相关推荐】\s*(.*?)(?=【|$)/s,
+                '今日挑战': /【今日挑战】\s*(.*?)(?=【|$)/s,
+                '明日预告': /【明日预告】\s*(.*?)(?=【|$)/s
+            };
+            
+            // 提取每个字段
+            for (const [field, pattern] of Object.entries(fieldPatterns)) {
+                const match = sectionText.match(pattern);
+                if (match && match[1]) {
+                    dayData[field] = match[1].trim();
+                    console.log(`提取到${field}:`, dayData[field].substring(0, 50) + '...');
+                }
+            }
+            
+            // 如果没有提取到标题，尝试其他格式
+            if (!dayData.标题) {
+                const dayMatch = sectionText.match(/Day\s*(\d+)[·\s]*(.*?)(?=\n|【)/);
+                if (dayMatch) {
+                    dayData.标题 = `Day ${dayMatch[1]} · ${dayMatch[2].trim()}`;
+                }
+            }
+            
+            // 验证是否提取到了有效内容
+            const hasValidContent = dayData.标题 || dayData.金句 || dayData.导语;
+            if (!hasValidContent) {
+                console.warn(`第${dayIndex}天内容解析失败`);
+                return null;
+            }
+            
+            return dayData;
+        }
+
+        function parseDayContent(dayText) {
+            return {
+                标题: extractFieldFromText(dayText, '标题') || '职场技能提升',
+                金句: extractFieldFromText(dayText, '金句') || '"成功源于持续的小进步"',
+                导语: extractFieldFromText(dayText, '导语') || '今天我们来学习一个重要的职场技能',
+                关键原则: extractFieldFromText(dayText, '关键原则') || '保持积极主动的态度',
+                真实案例: extractFieldFromText(dayText, '真实案例') || '小张通过运用这个方法成功提升了工作效率',
+                为什么有效: extractFieldFromText(dayText, '为什么有效') || '这个方法基于心理学原理，能够有效改善工作表现',
+                相关推荐: extractFieldFromText(dayText, '相关推荐') || '推荐阅读《高效能人士的七个习惯》',
+                今日挑战: extractFieldFromText(dayText, '今日挑战') || '今天尝试与一位同事进行深度交流',
+                明日预告: extractFieldFromText(dayText, '明日预告') || '明天我们将学习更多实用技巧'
+            };
+        }
+
+        function extractFieldFromText(text, fieldName) {
+            const patterns = [
+                new RegExp(`${fieldName}[：:](.*?)(?=\\n|$)`, 'i'),
+                new RegExp(`\\*\\*${fieldName}\\*\\*[：:]?(.*?)(?=\\n|$)`, 'i'),
+                new RegExp(`##\\s*${fieldName}[：:]?(.*?)(?=\\n|$)`, 'i')
+            ];
+            
+            for (const pattern of patterns) {
+                const match = text.match(pattern);
+                if (match && match[1]) {
+                    return match[1].trim();
+                }
+            }
+            return null;
+        }
+
+        function generateDaysFromContent(content) {
+            // 简单实现：将内容分成7段，每段作为一天
+            const days = [];
+            const lines = content.split('\n').filter(line => line.trim());
+            const linesPerDay = Math.ceil(lines.length / 7);
+            
+            for (let i = 0; i < 7; i++) {
+                const dayLines = lines.slice(i * linesPerDay, (i + 1) * linesPerDay);
+                const dayContent = dayLines.join('\n');
+                
+                days.push({
+                    day: i + 1,
+                    标题: `第${i + 1}天：职场技能提升`,
+                    金句: '"每一天都是成长的机会"',
+                    导语: `第${i + 1}天的学习内容，助你提升职场竞争力`,
+                    关键原则: '持续学习，积极实践',
+                    真实案例: dayContent.substring(0, 200) + '...',
+                    为什么有效: '基于科学方法和实践验证',
+                    相关推荐: '相关专业书籍和播客推荐',
+                    今日挑战: `完成第${i + 1}天的实践任务`,
+                    明日预告: i < 6 ? `明天学习第${i + 2}天内容` : '恭喜完成7天计划！'
+                });
+            }
+            
+            return days;
+        }
+
+        function generateDefaultPlan(userQuery) {
+            const basePlan = [
+                {
+                    day: 1,
+                    标题: '第1天：建立第一印象',
+                    金句: '"你永远不会有第二次机会来建立第一印象"',
+                    导语: '学会如何在职场中建立良好的第一印象，为后续发展奠定基础',
+                    关键原则: '主动、真诚、专业',
+                    真实案例: '小李入职第一天主动介绍自己，三个月后成为团队核心成员',
+                    为什么有效: '心理学研究表明，第一印象影响90%的后续交往',
+                    相关推荐: '《魅力》- 查理德·奥利维亚',
+                    今日挑战: '主动向3位同事介绍自己',
+                    明日预告: '明天学习如何快速了解团队文化'
+                },
+                {
+                    day: 2,
+                    标题: '第2天：了解团队文化',
+                    金句: '"适应环境比改变环境更重要"',
+                    导语: '深入了解团队的工作方式、价值观和潜规则',
+                    关键原则: '观察、倾听、学习',
+                    真实案例: '小王通过观察发现团队注重协作，调整工作方式后快速融入',
+                    为什么有效: '文化适应是团队融入的关键因素',
+                    相关推荐: '《团队协作的艺术》播客',
+                    今日挑战: '观察并记录团队的3个工作习惯',
+                    明日预告: '明天学习如何建立工作关系'
+                }
+                // 可以继续添加更多天的内容...
+            ];
+            
+            // 根据用户查询调整内容
+            return basePlan.slice(0, 7); // 返回7天内容
+        }
+
+        // 渲染计划列表
+        function renderPlanList(plan) {
+            // 更新标题和描述
+            document.getElementById('planTitle').textContent = plan.title;
+            document.getElementById('planDescription').textContent = plan.description;
+            document.getElementById('planDuration').textContent = plan.duration;
+            
+            // 渲染每日内容列表
+            const listContainer = document.getElementById('dailyContentList');
+            listContainer.innerHTML = '';
+            
+            plan.days.forEach((day, index) => {
+                const dayItem = document.createElement('div');
+                dayItem.className = 'bg-gray-50 rounded-lg p-4 hover:bg-gray-100 cursor-pointer transition-colors';
+                dayItem.onclick = () => showContentDetailView(index);
+                
+                dayItem.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="text-sm font-medium text-gray-900">第${day.day || index + 1}天</div>
+                        <div class="text-xs text-gray-500">5分钟阅读</div>
+                    </div>
+                    <div class="text-base font-bold text-gray-900 mb-1">${day.标题}</div>
+                    <div class="text-sm text-gray-600 mb-2">${day.金句}</div>
+                    <div class="text-xs text-gray-500 line-clamp-2">${day.导语}</div>
+                `;
+                
+                listContainer.appendChild(dayItem);
+            });
+        }
+
+        // 渲染内容详情页
+        function renderContentDetail(dayIndex) {
+            const day = currentPlan.days[dayIndex];
+            if (!day) return;
+            
+            const container = document.getElementById('contentDetailView');
+            container.innerHTML = `
+                <div class="max-w-md mx-auto bg-white font-geneva">
+                    <!-- 头图区域 - 杂志封面风格 -->
+                    <div class="bg-black text-white p-8 relative">
+                        <button onclick="showSubscriptionView()" class="absolute top-4 left-4 text-white hover:text-gray-300">
+                            ← 返回
+                        </button>
+                        <div class="absolute top-4 right-4 text-xs text-gray-400">DAY ${day.day || dayIndex + 1}</div>
+                        <div class="text-xs text-gray-300 mb-2 tracking-widest">WORKPLACE ESSENTIALS</div>
+                        <div class="text-2xl font-bold mb-3 leading-tight">${day.标题}</div>
+                        <div class="w-12 h-0.5 bg-white mb-4"></div>
+                        <div class="text-sm text-gray-200 italic">"${day.金句}"</div>
+                    </div>
+
+                    <div class="p-6 space-y-6">
+                        <!-- 开篇文字 -->
+                        <div class="text-gray-800 leading-relaxed">
+                            <p class="text-sm mb-3">${day.导语}</p>
+                        </div>
+
+                        <!-- 核心方法 -->
+                        <div class="border border-gray-200 p-5 bg-gray-50">
+                            <div class="text-center mb-4">
+                                <div class="text-lg font-bold text-gray-900 mb-1">核心原则</div>
+                                <div class="text-xs text-gray-600 tracking-wide">TODAY'S KEY PRINCIPLE</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-sm text-gray-700">${day.关键原则}</div>
+                            </div>
+                        </div>
+
+                        <!-- 案例故事 -->
+                        <div class="text-gray-800 leading-relaxed">
+                            <div class="text-sm font-bold text-gray-900 mb-2">真实案例</div>
+                            <p class="text-sm mb-3">${day.真实案例}</p>
+                        </div>
+
+                        <!-- 理论支撑 -->
+                        <div class="border-l-2 border-gray-300 pl-4">
+                            <div class="text-xs text-gray-500 mb-1">WHY IT WORKS</div>
+                            <div class="text-sm text-gray-700">${day.为什么有效}</div>
+                        </div>
+
+                        <!-- 相关推荐 -->
+                        <div class="bg-black text-white p-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <div class="text-xs text-gray-400 tracking-widest">RECOMMENDED READING</div>
+                                <div class="text-xs text-gray-400">推荐</div>
+                            </div>
+                            <div class="text-sm font-bold mb-1">延伸学习</div>
+                            <div class="text-xs text-gray-300 mb-3">${day.相关推荐}</div>
+                        </div>
+
+                        <!-- 行动号召 -->
+                        <div class="text-center py-4">
+                            <div class="text-lg font-bold text-gray-900 mb-2">今日挑战</div>
+                            <div class="text-sm text-gray-700 mb-3">${day.今日挑战}</div>
+                            <button onclick="completeDayChallenge(${dayIndex})" class="bg-black text-white px-6 py-2 text-sm hover:bg-gray-800 transition-colors">
+                                完成今日挑战
+                            </button>
+                        </div>
+
+                        <!-- 预告 -->
+                        <div class="text-center border-t border-gray-200 pt-4">
+                            <div class="text-xs text-gray-500 tracking-widest mb-1">TOMORROW</div>
+                            <div class="text-sm text-gray-700">${day.明日预告}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 完成每日挑战
+        function completeDayChallenge(dayIndex) {
+            alert('太棒了！你完成了今天的挑战。继续保持这种积极的态度！');
+            // 这里可以添加进度跟踪逻辑
+        }
+
+        // 测试解析功能（仅用于开发调试）
+        function testParsing() {
+            const sampleContent = `职场人脉「加速链接」7 天成长计划
+目标：帮助"产品经理 / 1 个月"在 1 周内建立一套可复制的人脉拓展方法，完成至少 3 位关键联系人深度链接、10 位弱关系激活，并形成长期维护机制。
+组成：
+
+目标设定与资源盘点
+形象打造与价值包装
+主动出击与深度交流
+周末复盘与情绪疗愈
+预期效果：掌握 5+ 人脉工具，完成可视化网络图、专属 follow-up 话术与 90 天维护节奏，减少社交焦虑，提升跨部门协同效率。
+【标题】Day 1 · 60 分钟人脉地图启动法
+【金句】"先描好地图，再上路，你才知道每一步走给谁看。"
+【导语】周二的节奏刚刚拉开，你或许还在适应新环境。别担心，几乎所有刚入职的产品经理都困惑：我该先找谁聊？今天，我们用 60 分钟画出你的第一张职场人脉地图，让目标清晰可见。
+【关键原则】
+
+业务关联度优先：列出需求最多的 3 条核心业务链（产品、研发、运营）。
+角色分层：关键决策人、合作执行者、潜在导师、同辈伙伴。
+三度人脉思维（Granovetter 弱连接理论）：弱关系往往带来突破性资源，不止关注直属同事。
+可视化工具：用 Miro/白板手绘，每个名字后标注"我能为 TA 提供什么"。
+目标数字：15 个名字即可，不要贪多。
+【真实案例】Reid Hoffman在创业 LinkedIn 前，用便利贴将自己需要的投资人、招聘顾问、技术顾问贴满墙，并写下"我能先帮到他们什么"，4 周内约到 70% 见面。后来他称这张墙为"机会发生器"。
+【为什么有效】社会资本理论指出，资源流动依赖网络结构；先定位节点再布局，能降低 40% 的搜索成本（Burt, 1992）。Miro 的视觉化输入触发"空间记忆效应"（认知心理学），提升 30% 召回率。
+【相关推荐】《关键路径：产品经理的人脉策略》——"地图让你不再无头苍蝇。"
+【今日挑战】今天下班前完成 15 人人脉地图，并给 3 位标星为"首要联系"。
+【明日预告】明天教你打造 30 秒电梯叙事，让每一次自我介绍都价值爆表。
+【标题】Day 2 · 30 秒电梯叙事：让介绍自带钩子
+【金句】"最短的介绍，装下最大的价值。"
+【导语】周三人流最密集，茶水间、电梯里都是机会。你只需要一段 30 秒的话术，让对方记住你"解决问题的人设"。
+【关键原则】
+
+FAB 模板：Feature（身份）–Advantage（优势）–Benefit（对他人的好处）。
+关键词≤3 个；避免行话，突出"可被转述"。
+加入小钩子：数字战绩或独特爱好，方便继续对话。
+练习 10 遍，确保语速≈150 wpm。
+【真实案例】字节跳动产品经理晓宁每次跨部门评审前都会用 "Hi，我是晓宁，关注增长漏斗，最近把新手留存提高了 18%，可随时帮忙做埋点诊断" 开场，一年内成为 4 个团队的"默认顾问"。
+【为什么有效】根据 Cialdini "印刻效应"，首轮信息若同时满足清晰、利他与可复述，记忆点可提升 2 倍。FAB 模型源自宝洁销售训练，被验证可在 7 秒内传递价值。
+【相关推荐】喜马拉雅《电梯演讲魔鬼训练营》——"给对方一句话，就能想起你。"
+【今日挑战】录音 3 版电梯叙事，发给好友打分，得分≥8/10 方可收录。
+【明日预告】明天我们走出舒适区，发送第一波价值型问候。`;
+            
+            console.log('开始测试解析功能...');
+            const testPlan = parsePlanData(sampleContent, '测试');
+            console.log('解析结果:', testPlan);
+            
+            // 直接渲染到界面进行测试
+            currentPlan = testPlan;
+            renderPlanList(currentPlan);
+            showSubscriptionView();
+        }
+
+        // 在页面加载完成后添加调试按钮（可选）
+        document.addEventListener('DOMContentLoaded', function() {
+            // 添加调试按钮到页面（可选，用于开发调试）
+            if (window.location.hostname === 'localhost' || window.location.hostname.includes('local')) {
+                const debugBtn = document.createElement('button');
+                debugBtn.textContent = 'Debug';
+                debugBtn.style.cssText = 'position:fixed;top:10px;right:10px;z-index:9999;background:red;color:white;padding:5px;';
+                debugBtn.onclick = debugInfo;
+                document.body.appendChild(debugBtn);
+                
+                const testBtn = document.createElement('button');
+                testBtn.textContent = 'Test Parse';
+                testBtn.style.cssText = 'position:fixed;top:10px;right:80px;z-index:9999;background:blue;color:white;padding:5px;';
+                testBtn.onclick = testParsing;
+                document.body.appendChild(testBtn);
+                
+                // 添加一个输入测试按钮
+                const inputTestBtn = document.createElement('button');
+                inputTestBtn.textContent = 'Input Test';
+                inputTestBtn.style.cssText = 'position:fixed;top:40px;right:80px;z-index:9999;background:green;color:white;padding:5px;font-size:10px;';
+                inputTestBtn.onclick = () => {
+                    const content = prompt('请输入dify返回的内容进行测试:');
+                    if (content) {
+                        console.log('开始测试用户输入的内容...');
+                        handleConversationResponse(content, '测试用户消息');
+                    }
+                };
+                document.body.appendChild(inputTestBtn);
+                
+                // 添加强制解析按钮
+                const forceParseBtn = document.createElement('button');
+                forceParseBtn.textContent = 'Force Parse';
+                forceParseBtn.style.cssText = 'position:fixed;top:70px;right:80px;z-index:9999;background:orange;color:white;padding:5px;font-size:10px;';
+                forceParseBtn.onclick = () => {
+                    const content = prompt('输入内容强制解析（忽略检测）:');
+                    if (content) {
+                        console.log('强制解析内容...');
+                        // 强制解析，跳过检测
+                        conversationPhase = 'completed';
+                        planGenerationInProgress = false;
+                        currentPlan = parsePlanData(content, '强制解析测试');
+                        console.log('强制解析结果:', currentPlan);
+                        renderPlanList(currentPlan);
+                        showSubscriptionView();
+                    }
+                };
+                document.body.appendChild(forceParseBtn);
+            }
+        });
+    </script>
+</body>
+</html>
